@@ -1,16 +1,17 @@
-from django.contrib.auth.forms import UserCreationForm
-from django.shortcuts import redirect
-from django.contrib.auth import login
-from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
+from django.shortcuts import render
+from django.views.generic import DetailView
+from .models import Library, Book
 
-class RegisterView(CreateView):
-    form_class = UserCreationForm
-    template_name = 'relationship_app/register.html'
-    success_url = reverse_lazy('list_books')
+class LibraryDetailView(DetailView):
+    model = Library
+    template_name = "relationship_app/library_detail.html"
+    context_object_name = "library"
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        user = form.save()
-        login(self.request, user)
-        return response
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['books'] = self.object.books.all()
+        return context
+
+def list_books(request):
+    books = Book.objects.select_related('author').all()
+    return render(request, 'relationship_app/list_books.html', {'books': books})
