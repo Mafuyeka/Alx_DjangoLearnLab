@@ -1,10 +1,7 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import BookViewSet
+from rest_framework.generics import ListAPIView
+from .models import Book
+from .serializers import BookSerializer
 
-router = DefaultRouter()
-router.register(r'books', BookViewSet, basename='book')
-
-urlpatterns = [
-    path('', include(router.urls)),
-]
+class BookList(ListAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
