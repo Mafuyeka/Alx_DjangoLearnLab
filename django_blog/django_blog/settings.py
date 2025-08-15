@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'blog',  # Make sure this is here
+    'taggit',  # Add this line
 ]
 
 MIDDLEWARE = [
@@ -85,8 +88,12 @@ WSGI_APPLICATION = 'django_blog.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_blog_db',  # your DB name
+        'USER': 'your_db_user',    # your DB user
+        'PASSWORD': 'your_db_password', # your DB password
+        'HOST': 'localhost',       # or your DB host
+        'PORT': '5432',            # default PostgreSQL port
     }
 }
 
