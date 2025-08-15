@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}{{ object.title }}{% endblock %}
+
+{% block content %}
+<article>
+    <h1>{{ object.title }}</h1>
+    <p>By {{ object.author.username }} on {{ object.published_date|date:"F j, Y" }}</p>
+    <p>{{ object.content }}</p>
+    <p>Tags: 
+        {% for tag in object.tags.all %}
+            <a href="{% url 'posts_by_tag' tag.name %}">{{ tag.name }}</a>{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </p>
+
+    {% if user == object.author %}
+        <p>
+            <a href="{% url 'post_update' object.pk %}">Edit</a> |
+            <a href="{% url 'post_delete' object.pk %}">Delete</a>
+        </p>
+    {% endif %}
+</article>
+
+<section>
+    <h2>Comments</h2>
+    {% for comment in object.comments.all %}
+        <div>
+            <p><strong>{{ comment.author.username }}</strong> on {{ comment.created_at|date:"F j, Y H:i" }}</p>
+            <p>{{ comment.content }}</p>
+            {% if user == comment.author %}
+                <p>
+                    <a href="{% url 'comment_update' comment.pk %}">Edit</a> |
+                    <a href="{% url 'comment_delete' comment.pk %}">Delete</a>
+                </p>
+            {% endif %}
+        </div>
+        <hr>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+</section>
+
+<section>
+    <h3>Add a comment</h3>
+    <form method="post" action="{% url 'comment_create' object.pk %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit Comment</button>
+    </form>
+</section>
+{% endblock %}
