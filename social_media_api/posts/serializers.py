@@ -1,14 +1,15 @@
 from rest_framework import serializers
-from .models import Post, Comment
+from .models import Post, Comment, Like
+from notifications.models import Notification  # Correct import
 
 class PostSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source='author.username')
+    likes_count = serializers.IntegerField(source='like_set.count', read_only=True)
+
     class Meta:
         model = Post
-        fields = '__all__'
+        fields = ['id', 'author', 'content', 'created_at', 'likes_count']
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source='author.username')
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = ['id', 'post', 'author', 'content', 'created_at']
