@@ -76,3 +76,9 @@ class CommentViewSet(viewsets.ModelViewSet):
 class FeedView(generics.ListAPIView):
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Post.objects.filter(
+            Q(author=user) | Q(author__in=user.following.all())
+        ).order_by('-created_at')
