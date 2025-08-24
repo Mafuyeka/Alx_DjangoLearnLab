@@ -8,6 +8,10 @@ from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()
 
+
+# -------------------------------
+# Registration
+# -------------------------------
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
@@ -15,10 +19,13 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
         user = User.objects.get(username=response.data["username"])
-        token = Token.objects.get(user=user)
+        token, _ = Token.objects.get_or_create(user=user)
         return Response({"user": response.data, "token": token.key})
 
 
+# -------------------------------
+# Login
+# -------------------------------
 class LoginView(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
@@ -30,6 +37,9 @@ class LoginView(ObtainAuthToken):
         })
 
 
+# -------------------------------
+# Profile View
+# -------------------------------
 class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -38,13 +48,17 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-# ✅ New Follow / Unfollow Views
+# -------------------------------
+# Follow / Unfollow Views
+# -------------------------------
 class FollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, user_id):
         target_user = get_object_or_404(User, id=user_id)
-        request.user.followers.add(target_user)
+        if target_user == request.user:
+            return Response({"detail": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+        request.user.following.add(target_user)
         return Response({"detail": f"You are now following {target_user.username}"}, status=status.HTTP_200_OK)
 
 
@@ -53,5 +67,7 @@ class UnfollowUserView(generics.GenericAPIView):
 
     def post(self, request, user_id):
         target_user = get_object_or_404(User, id=user_id)
-        request.user.followers.remove(target_user)
+        if target_user == request.user:
+            return Response({"detail": "You cannot unfollow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+        request.user.following.remove(target_user)
         return Response({"detail": f"You have unfollowed {target_user.username}"}, status=status.HTTP_200_OK)
