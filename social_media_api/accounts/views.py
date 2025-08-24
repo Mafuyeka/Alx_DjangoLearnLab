@@ -1,13 +1,12 @@
 from rest_framework import generics, permissions, status
-from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()
-
 
 # -------------------------------
 # Registration
@@ -17,10 +16,14 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        user = User.objects.get(username=response.data["username"])
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()  # ensures password is hashed
         token, _ = Token.objects.get_or_create(user=user)
-        return Response({"user": response.data, "token": token.key})
+        return Response(
+            {"user": serializer.data, "token": token.key},
+            status=status.HTTP_201_CREATED
+        )
 
 
 # -------------------------------
@@ -28,12 +31,14 @@ class RegisterView(generics.CreateAPIView):
 # -------------------------------
 class LoginView(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        token = Token.objects.get(key=response.data['token'])
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, _ = Token.objects.get_or_create(user=user)
         return Response({
             "token": token.key,
-            "user_id": token.user_id,
-            "username": token.user.username
+            "user_id": user.id,
+            "username": user.username
         })
 
 
