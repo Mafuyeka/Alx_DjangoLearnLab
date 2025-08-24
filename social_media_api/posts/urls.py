@@ -7,9 +7,6 @@ router.register(r'posts', PostViewSet, basename='post')
 router.register(r'comments', CommentViewSet, basename='comment')
 
 urlpatterns = [
-    # API routes via router
-    path('', include(router.urls)),
-
-    # Feed endpoint
     path('feed/', FeedView.as_view(), name='feed'),
+    path('', include(router.urls)),  # Includes CRUD endpoints for posts and comments
 ]
